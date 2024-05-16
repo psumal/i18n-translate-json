@@ -10,6 +10,10 @@ var argv = require("yargs")
     .usage("Usage: $0 <apiKey> <startDir> <sourceLang> <targetLang1,targetLang2,..>")
     .boolean("includeHtml")
     .describe("includeHtml", "Include HTML entries in the translation")
+    .boolean("missingOnly")
+    .describe("missingOnly", "Do not overwrite existing translation")
+    .number("spaces")
+    .describe("spaces", "Number of spaces in output-json. If omitted, tabs are used.")
     .help("h")
     .alias("h", "help")
     .example("$0 YOUR_API_KEY examples/ en nl,de", "Translate the file examples/en.json to examples/nl.json and examples/de.json")
@@ -36,7 +40,7 @@ if (startDir[startDir.length - 1] != "/") {
 var run = function() {
   path.resolve(__dirname, startDir);
 
-  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, function(err, result) {
+  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, argv.missingOnly, argv.spaces, function(err, result) {
   
   	if (err) {
   		console.log("ERROR:");

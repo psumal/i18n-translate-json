@@ -32,3 +32,4 @@ test/config.js
 # Examples
 examples/*
 !examples/en.json
+.idea
