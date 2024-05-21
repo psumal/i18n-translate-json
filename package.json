@@ -22,9 +22,9 @@
   },
   "scripts": {
     "test": "echo 'No tests yet' && exit 0",
-    "publish:major": "npm login && npm version major && npm publish",
-    "publish:minor": "npm login && npm version minor && npm publish",
-    "publish:patch": "npm login && npm version patch && npm publish"
+    "publish:major": "npm login && npm version major && npm publish --access=public",
+    "publish:minor": "npm login && npm version minor && npm publish --access=public",
+    "publish:patch": "npm login && npm version patch && npm publish --access=public"
   },
   "repository": {
     "type": "git",
