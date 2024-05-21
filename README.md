@@ -4,8 +4,13 @@ Automatically translates node-i18n JSON files into different languages via Googl
 
 ## Installation
 
+**Global**:
 ```
-npm install -g i18n-translate-json
+npm install -g @somsoft/i18n-translate-json
+```
+**Project (Development only)**:
+```
+npm install --save-dev @somsoft/i18n-translate-json
 ```
 
 ## Usage
@@ -46,5 +51,5 @@ Run `npm run publish:<major|minor|patch>` to publish a new major, minor or patch
 ## Credits
 
 Based on [i18n-translate](https://github.com/thomasbrueggemann/i18n-translate) by Thomas Brüggemann.
+Based on [i18n-translate-json](https://github.com/meedan/i18n-translate-json) by  [Meedan](http://meedan.com).
 
-This fork is sponsored by [Meedan](http://meedan.com).
