@@ -2,7 +2,7 @@
   "name": "@somsoft/i18n-translate-json",
   "description": "Automatically translates i18n JSON files via Google Translate API",
   "preferGlobal": true,
-  "version": "1.3.3",
+  "version": "1.3.4",
   "private": false,
   "author": "Meedan",
   "contributors": [
