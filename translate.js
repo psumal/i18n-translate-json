@@ -2,6 +2,7 @@ var fs = require("fs");
 var async = require("async");
 var traverse = require("traverse");
 var google = require("google-translate");
+const pathsToRemove = require("async/index");
 
 var TRANSERR = {
   NOT_TRANSLATED: 1,
@@ -9,55 +10,56 @@ var TRANSERR = {
 };
 
 
-/**
- *
- * @param dir
- * @param languages
- * @param callback Fired after last language was loaded and mapped. Type: (error:{file:string, error: ? },translations: {[language: string]: traverse }) => void;
- * @param translations Optional. Type: {[language: string]: traverse }
- * @private
- */
-const loadTargetTranslations = function (dir, languages, missingOnly, callback, fileExtension, translations, index) {
-  fileExtension = fileExtension || '.json';
-  translations = translations || {};
-  index = index || 0;
-
-  if (!missingOnly || index >= languages.length) {
-    callback(null, translations);
-    return;
-  }
-  const lang = languages[index];
-  const file = dir + lang + fileExtension;
-  fs.readFile(file, (error, data) => {
-    if (error) {
-      //file not found
-    } else {
-      const strData = data.toString();
-      let transData;
-      try {
-        transData = JSON.parse(strData);
-        translations[lang] = traverse(transData);
-      } catch (error) {
-        callback({
-          "file": file,
-          "error": error
-        }, null);
-        return;
-      }
-    }
-    index = index + 1;
-    loadTargetTranslations(dir, languages, true, callback, fileExtension, translations, index);
-  });
-}
-
-
 // RUN
-var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missingOnly, spaces, finish) {
-
+var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missingOnly, cleanUp, spaces, finish) {
   var ggl = google(apiKey);
 
+  /**
+   * Loads existing translations from files
+   * @param languages
+   * @param callback Fired after last language was loaded and mapped. Type: (error:{file:string, error: ? },translations: {[language: string]: traverse }) => void;
+   * @param translations Optional. Type: {[language: string]: traverse }
+   * @private
+   */
+  var loadTargetTranslations = function (languages, missingOnly, callback, fileExtension, translations, index) {
+    fileExtension = fileExtension || '.json';
+    translations = translations || {};
+    index = index || 0;
+
+    if (!missingOnly || index >= languages.length) {
+      callback(null, translations);
+      return;
+    }
+    const lang = languages[index];
+    const file = dir + lang + fileExtension;
+    fs.readFile(file, (error, data) => {
+      if (error) {
+        //file not found
+      } else {
+        const strData = data.toString();
+        let transData;
+        try {
+          transData = JSON.parse(strData);
+          translations[lang] = traverse(transData);
+        } catch (error) {
+          callback({
+            "file": file,
+            "error": error
+          }, null);
+          return;
+        }
+      }
+      loadTargetTranslations(languages, true, callback, fileExtension, translations, ++index);
+    });
+  }
+
+
   // TRANSLATE
-  var translate = function (text, language, callback) {
+  var translate = function (text, language, currentTranslation, missingOnly, callback) {
+    if (missingOnly && currentTranslation) {
+      return callback(null, currentTranslation);
+    }
+
 
     // passthrough if contains HTML
     if (!includeHtml && /<[a-z][\s\S]*>/i.test(text) == true) {
@@ -88,6 +90,21 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
     }
   };
 
+  var cleanUpTargets = function (source, targets, languages, callback) {
+    if (!cleanUp) {
+      return callback();
+    }
+
+    languages.forEach(function (lang) {
+      targets[lang].forEach(function() {
+        if (!source.has(this.path)) {
+          this.delete();
+        }
+      });
+    });
+    callback();
+  }
+
   // PROCESS FILE
   var processFile = function (file, callback) {
 
@@ -116,7 +133,7 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
 
       var traversed = traverse(parsed);
 
-      loadTargetTranslations(dir, languages, missingOnly, function (err, targets) {
+      loadTargetTranslations(languages, missingOnly, function (err, targets) {
         if (err) {
           return callback(err);
         }
@@ -146,13 +163,9 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
               async.map(languages, function (language, translated) {
 
                 // translate the text
-                translate(text, language, function (err, translation) {
+                translate(text, language, targets[language].get(path), missingOnly, function (err, translation) {
                   const targetLang = targets[language];
-
-                  if (!missingOnly || !targetLang.has(path) || !targetLang.get(path)) {
-                    // add new value to path
-                    targetLang.set(path, translation);
-                  }
+                  targetLang.set(path, translation);
 
                   var e = null;
                   if (err === TRANSERR.NOT_TRANSLATED) {
@@ -171,51 +184,54 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
                 // all languages have been translated for this path,
                 // so call the done callback of the map through all paths
               }, done);
-            },
+            }, (err, results) => cleanUpTargets(traversed, targets, languages,
+                // all are translated
+                function () {
 
-            // all are translated
-            function (err, results) {
+                  // write translated targets to files
+                  for (var t in targets) {
+                    var transStr = JSON.stringify(targets[t].value, null, spaces || "\t");
 
-              // write translated targets to files
-              for (var t in targets) {
-                var transStr = JSON.stringify(targets[t].value, null, spaces || "\t");
+                    var p = dir + t + ".json";
+                    fs.writeFileSync(p, transStr);
 
-                var p = dir + t + ".json";
-                fs.writeFileSync(p, transStr);
-
-                // add language to source file
-                parsed[t] = true;
-              }
-
-              // filter out null results, to just return the not translated ones
-              notTranslated = results.filter(function (item) {
-
-                // check if array only contains nulls
-                for (var i in item) {
-                  if (item[i] != null) {
-                    return true;
+                    // add language to source file
+                    parsed[t] = true;
                   }
-                }
 
-                return false;
-              });
+                  // filter out null results, to just return the not translated ones
+                  notTranslated = results.filter(function (item) {
 
-              // spice up error message
-              if (err) {
-                err = {
-                  "file": file,
-                  "error": err
-                };
-              }
+                    // check if array only contains nulls
+                    for (var i in item) {
+                      if (item[i] != null) {
+                        return true;
+                      }
+                    }
 
-              return callback(err, notTranslated);
-            });
+                    return false;
+                  });
+
+                  // spice up error message
+                  if (err) {
+                    err = {
+                      "file": file,
+                      "error": err
+                    };
+                  }
+
+                  return callback(err, notTranslated);
+                })
+        );
+
+
       });
     });
   };
 
   // process the source file
   processFile(sourceLanguage + '.json', finish);
+
 };
 
 // EXPORTS

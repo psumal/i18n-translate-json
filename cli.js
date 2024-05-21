@@ -11,7 +11,9 @@ var argv = require("yargs")
     .boolean("includeHtml")
     .describe("includeHtml", "Include HTML entries in the translation")
     .boolean("missingOnly")
-    .describe("missingOnly", "Do not overwrite existing translation")
+    .describe("missingOnly", "If set, do not overwrite existing translation")
+    .boolean("cleanUp")
+    .describe("cleanUp", "If set, removes unused translations at target files.")
     .number("spaces")
     .describe("spaces", "Number of spaces in output-json. If omitted, tabs are used.")
     .help("h")
@@ -40,7 +42,7 @@ if (startDir[startDir.length - 1] != "/") {
 var run = function() {
   path.resolve(__dirname, startDir);
 
-  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, argv.missingOnly, argv.spaces, function(err, result) {
+  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, argv.missingOnly, argv.cleanUp, argv.spaces, function(err, result) {
   
   	if (err) {
   		console.log("ERROR:");
