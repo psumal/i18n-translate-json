@@ -1,9 +1,9 @@
 {
-  "name": "i18n-translate-json",
+  "name": "@somsoft/i18n-translate-json",
   "description": "Automatically translates i18n JSON files via Google Translate API",
   "preferGlobal": true,
   "version": "1.1.0",
-  "private": false,
+  "private": true,
   "author": "Meedan",
   "contributors": ["Steffion"],
   "dependencies": {
@@ -19,7 +19,10 @@
     "glob": "*"
   },
   "scripts": {
-    "test": "echo 'No tests yet' && exit 0"
+    "test": "echo 'No tests yet' && exit 0",
+    "publish:major": "npm version major && npm publish",
+    "publish:minor": "npm version minor && npm publish",
+    "publish:patch": "npm version patch && npm publish"
   },
   "repository": {
     "type": "git",

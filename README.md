@@ -37,6 +37,9 @@ The target languages list is optional. When not present, it will be translated t
 | help        | Show help                                                   |
 
 
+## Publish npm
+Run `npm run publish:<major|minor|patch>` to publish a new major, minor or patch version to npm.
+
 
 
 ## Credits
