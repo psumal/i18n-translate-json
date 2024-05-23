@@ -142,7 +142,7 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
           const lang = languages[l];
           //Do not change the behaviour in case `missingOnly` is not set
           if (!missingOnly || !targets[lang]) {
-            targets[lang] = traverse(traversed.clone());
+            targets[lang] = traverse({});
           }
         }
 
