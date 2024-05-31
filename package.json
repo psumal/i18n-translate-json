@@ -9,16 +9,16 @@
     "Steffion"
   ],
   "dependencies": {
-    "async": "3.2.0",
+    "async": "^3.2.5",
     "get-json": "1.0.1",
-    "google-translate": "3.0.0",
+    "needle": "^3.3.1",
     "traverse": "0.6.6",
     "yargs": "^15.3.1"
   },
   "devDependencies": {
+    "glob": "*",
     "mocha": "*",
-    "should": ">=13.2.3",
-    "glob": "*"
+    "should": ">=13.2.3"
   },
   "scripts": {
     "test": "echo 'No tests yet' && exit 0",
@@ -45,5 +45,8 @@
   "bugs": {
     "url": "https://github.com/psumal/i18n-translate-json/issues"
   },
-  "homepage": "https://github.com/psumal/i18n-translate-json"
+  "homepage": "https://github.com/psumal/i18n-translate-json",
+  "engines": {
+    "node": ">= 4.4.x"
+  }
 }

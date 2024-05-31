@@ -1,8 +1,9 @@
-var fs = require("fs");
-var async = require("async");
-var traverse = require("traverse");
-var google = require("google-translate");
-const pathsToRemove = require("async/index");
+const fs = require("fs");
+const async = require("async");
+const traverse = require("traverse");
+const querystring = require('node:querystring');
+const needle = require('needle');
+
 
 var TRANSERR = {
   NOT_TRANSLATED: 1,
@@ -10,9 +11,33 @@ var TRANSERR = {
 };
 
 
+
+
 // RUN
 var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missingOnly, cleanUp, spaces, finish) {
-  var ggl = google(apiKey);
+  //var ggl = google(apiKey);
+  /**
+   * @param callback (error: any | null, translation: string | null) => void;
+   */
+  const googleTranslate = function(text, sourceLanguage, targetLanguage, callback) {
+      const url = 'https://translation.googleapis.com/language/translate/v2?' +
+        querystring.stringify({key: apiKey, q: [text, 'zusätzliche Übersetzung'], source: sourceLanguage, target: targetLanguage});
+        needle.get(url, (error, response) => {
+          if (error) {
+            callback(error, null);
+          } else if (response.statusCode >= 400) {
+            callback(new Error('Google translate failed with http-status-code ' + response.statusCode), null);
+          } else {
+            //Response-body: {"data":{"translations":[{"translatedText":"my-translated-text!"}]}}
+            const translations = response.body?.data?.translations;
+            if (Array.isArray(translations) && translations.length > 0) {
+              callback(null, translations[0].translatedText);
+            } else {
+              callback(null, '');
+            }
+          }
+        });
+  }
 
   /**
    * Loads existing translations from files
@@ -74,14 +99,14 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
     if (apiKey) {
 
       // fire the google translation
-      ggl.translate(text, sourceLanguage, language, function (err, translation) {
+      googleTranslate(text, sourceLanguage, language, function (err, translation) {
 
         if (err) {
           return callback(TRANSERR.NOT_TRANSLATED, text);
         }
 
         // return the translated text
-        return callback(null, translation.translatedText);
+        return callback(null, translation);
       });
     } else {
 
@@ -165,7 +190,12 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
                 // translate the text
                 translate(text, language, targets[language].get(path), missingOnly, function (err, translation) {
                   const targetLang = targets[language];
-                  targetLang.set(path, translation);
+                  if (!err) {
+                    targetLang.set(path, translation);
+                  } else {
+                    targetLang.set(path, '');
+                  }
+
 
                   var e = null;
                   if (err === TRANSERR.NOT_TRANSLATED) {
