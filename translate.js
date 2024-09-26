@@ -14,12 +14,20 @@ var TRANSERR = {
 
 
 // RUN
-var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missingOnly, cleanUp, spaces, finish) {
+var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missingOnly, cleanUp, spaces, ignoreRegExp, finish) {
   //var ggl = google(apiKey);
   /**
    * @param callback (error: any | null, translation: string | null) => void;
    */
-  const googleTranslate = function(text, sourceLanguage, targetLanguage, callback) {
+  const googleTranslate = function(text, sourceLanguage, targetLanguage,  callback) {
+      // Google translates interpolation-variables (`{{ my-variable-name }}`), too.
+      // Replace variable names by index
+      // RegExp: `/\{\{\s*(.*?)\s*\}\}/g`
+      const ignoreTexts = ignoreRegExp ? text.match(new RegExp(ignoreRegExp)) : [];
+
+      ignoreTexts?.forEach((ivar, i) => {
+        text = text.replaceAll(ivar, '{{' + i + '}}');
+      });
       const url = 'https://translation.googleapis.com/language/translate/v2?' +
         querystring.stringify({key: apiKey, q: [text, 'zusätzliche Übersetzung'], source: sourceLanguage, target: targetLanguage});
         needle.get(url, (error, response) => {
@@ -30,8 +38,12 @@ var run = function (apiKey, dir, sourceLanguage, languages, includeHtml, missing
           } else {
             //Response-body: {"data":{"translations":[{"translatedText":"my-translated-text!"}]}}
             const translations = response.body?.data?.translations;
-            if (Array.isArray(translations) && translations.length > 0) {
-              callback(null, translations[0].translatedText);
+            if (Array.isArray(translations) && translations.length > 0 && typeof translations[0].translatedText === 'string') {
+              let text = translations[0].translatedText;
+              ignoreTexts?.forEach((ivar, i) => {
+                text = text.replaceAll('{{' + i + '}}', ivar);
+              });
+              callback(null, text);
             } else {
               callback(null, '');
             }

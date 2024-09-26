@@ -16,6 +16,8 @@ var argv = require("yargs")
     .describe("cleanUp", "If set, removes unused translations at target files.")
     .number("spaces")
     .describe("spaces", "Number of spaces in output-json. If option is omitted, tabs are used.")
+    .string("ignoreRegExp")
+    .describe("ignoreRegExp", "A regular expression to ignore. Set `\\{\\{\\s*(.*?)\\s*\\}\\}` for angular interpolation variables (`{{ my-variable-name }}`). Default: Translate all.")
     .help("h")
     .alias("h", "help")
     .example("$0 YOUR_API_KEY examples/ en nl,de", "Translate the file examples/en.json to examples/nl.json and examples/de.json")
@@ -42,7 +44,7 @@ if (startDir[startDir.length - 1] != "/") {
 var run = function() {
   path.resolve(__dirname, startDir);
 
-  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, argv.missingOnly, argv.cleanUp, argv.spaces, function(err, result) {
+  translate.run(apiKey, startDir, sourceLang, targetLang, argv.includeHtml, argv.missingOnly, argv.cleanUp, argv.spaces, argv.ignoreRegExp,  function(err, result) {
   
   	if (err) {
   		console.log("ERROR:");
