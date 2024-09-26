@@ -34,15 +34,15 @@ The target languages list is optional. When not present, it will be translated t
 ### Options
 
 
-| Option                | Description                                                           |
-|-----------------------|-----------------------------------------------------------------------|
-| includeHtml           | Include HTML entries in the translation                               |
-| missingOnly           | If set, do not overwrite existing translation                         | 
-| cleanUp               | If set, removes unused translations at target files.                  | 
-| spaces [number]       | Number of spaces in output-json. If option is omitted, tabs are used. | 
-| ignoreRegExp [string] | A Regular expression used to define texts parts not to be translated. |
-|                       | For angular interpolation variables, use `\{\{\s*(.*?)\s*\}\}`        |
-| help                  | Show help                                                             |
+| Option                | Description                                                                             |
+|-----------------------|-----------------------------------------------------------------------------------------|
+| includeHtml           | Include HTML entries in the translation                                                 |
+| missingOnly           | If set, do not overwrite existing translation                                           | 
+| cleanUp               | If set, removes unused translations at target files.                                    | 
+| spaces [number]       | Number of spaces in output-json. If option is omitted, tabs are used.                   | 
+| ignoreRegExp [string] | A Regular expression used to define texts parts not to be translated.                   |
+|                       | For angular interpolation variables, use `\{\{\s*(.*?)\s*\}\}`. Default: Translate all. |
+| help                  | Show help                                                                               |
  
 
 ## Publish npm
