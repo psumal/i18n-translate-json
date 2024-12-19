@@ -39,7 +39,6 @@ if (startDir[startDir.length - 1] != "/") {
 	startDir += "/";
 }
 
-
 // run translation
 var run = function() {
   path.resolve(__dirname, startDir);
